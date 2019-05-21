@@ -19,14 +19,32 @@ const useField = (type) => {
 const useResource = (baseUrl) => {
   const [resources, setResources] = useState([])
 
-  // ...
+  let token = null
 
-  const create = (resource) => {
-    // ...
+  const setToken = newToken => {
+    token = `bearer ${newToken}`
+  }
+
+  const getAll = () => {
+    const request = axios.get(baseUrl)
+    return request.then(response => setResources(response.data))
+  }
+
+  const create = async newObject => {
+    const config = {
+      headers: { Authorization: token },
+    }
+    const response = await axios.post(baseUrl, newObject, config)
+    setResources(resources.concat(response.data))
+  }
+
+  const update = (id, newObject) => {
+    const request = axios.put(`${ baseUrl } /${id}`, newObject)
+    return request.then(response => response.data)
   }
 
   const service = {
-    create
+    setToken, getAll, create, update
   }
 
   return [
@@ -41,6 +59,10 @@ const App = () => {
 
   const [notes, noteService] = useResource('http://localhost:3005/notes')
   const [persons, personService] = useResource('http://localhost:3005/persons')
+
+  useEffect(() => { noteService.getAll() }, [])
+
+  useEffect(() => { personService.getAll() }, [])
 
   const handleNoteSubmit = (event) => {
     event.preventDefault()
